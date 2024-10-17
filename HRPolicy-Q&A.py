@@ -12,13 +12,13 @@ model = GPT2LMHeadModel.from_pretrained(model_id)
 # Set the model to evaluation mode
 model.eval()
 
-# Function to generate an answer based on a question
-def generate_answer(question, max_length, num_return_sequences, top_k, top_p, temperature):
+# Function to generate answers based on a question
+def generate_answers(question, max_length, num_return_sequences, top_k, top_p, temperature):
     input_text = f"Question: {question} Answer:"
     input_ids = tokenizer.encode(input_text, return_tensors="pt")
 
     with torch.no_grad():
-        output = model.generate(
+        outputs = model.generate(
             input_ids,
             max_length=max_length,
             num_return_sequences=num_return_sequences,
@@ -28,8 +28,8 @@ def generate_answer(question, max_length, num_return_sequences, top_k, top_p, te
             temperature=temperature
         )
 
-    answer = tokenizer.decode(output[0], skip_special_tokens=True)
-    return answer.split("Answer:")[-1].strip()
+    answers = [tokenizer.decode(output, skip_special_tokens=True).split("Answer:")[-1].strip() for output in outputs]
+    return answers
 
 # Sample questions to guide users
 sample_questions = [
@@ -56,15 +56,15 @@ temperature = st.sidebar.slider("Temperature", 0.0, 2.0, 1.0)
 # User input for question
 question = st.text_input("Enter your HR question:", "How should HR policies be changed?")
 
-if st.button("Generate Answer"):
+if st.button("Generate Answers"):
     if question:
-        answer = generate_answer(question, max_length, num_return_sequences, top_k, top_p, temperature)
-        st.subheader("Generated Answer:")
-        st.write(answer)
+        answers = generate_answers(question, max_length, num_return_sequences, top_k, top_p, temperature)
+        st.subheader("Generated Answers:")
+        for i, answer in enumerate(answers):
+            st.write(f"Response {i + 1}: {answer}")
     else:
         st.write("Please enter a question.")
 
 st.sidebar.header("Sample Questions")
 for q in sample_questions:
     st.sidebar.write(f"- {q}")
-
