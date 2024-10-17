@@ -17,19 +17,24 @@ def generate_answers(question, max_length, num_return_sequences, top_k, top_p, t
     input_text = f"Question: {question} Answer:"
     input_ids = tokenizer.encode(input_text, return_tensors="pt")
 
-    with torch.no_grad():
-        outputs = model.generate(
-            input_ids,
-            max_length=max_length,
-            num_return_sequences=num_return_sequences,
-            no_repeat_ngram_size=2,
-            top_k=top_k,
-            top_p=top_p,
-            temperature=temperature
-        )
+    try:
+        with torch.no_grad():
+            outputs = model.generate(
+                input_ids,
+                max_length=max_length,
+                num_return_sequences=num_return_sequences,
+                no_repeat_ngram_size=2,
+                top_k=top_k,
+                top_p=top_p,
+                temperature=temperature,
+                do_sample=True  # Enable sampling for varied outputs
+            )
 
-    answers = [tokenizer.decode(output, skip_special_tokens=True).split("Answer:")[-1].strip() for output in outputs]
-    return answers
+        answers = [tokenizer.decode(output, skip_special_tokens=True).split("Answer:")[-1].strip() for output in outputs]
+        return answers
+    except Exception as e:
+        st.error(f"Error generating answers: {e}")
+        return []
 
 # Sample questions to guide users
 sample_questions = [
